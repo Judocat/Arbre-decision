@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbre de Décision IRSI/CIDE COP</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .header { background: #00843d; color: white; padding: 30px 20px; text-align: center; border-radius: 8px; margin-bottom: 30px; }
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .card { background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .question { font-size: 20px; font-weight: 600; margin-bottom: 20px; color: #00843d; }
+        .info { font-size: 13px; color: #666; margin-bottom: 20px; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+        .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        button { padding: 12px 20px; border: 2px solid #00843d; background: white; color: #00843d; border-radius: 6px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        button:hover { background: #00843d; color: white; }
+        button:active { transform: scale(0.98); }
+        .nav { display: flex; gap: 10px; }
+        .nav button { flex: 1; }
+        .nav button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .breadcrumb { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; font-size: 12px; color: #666; }
+        .progress { height: 4px; background: #e0e0e0; border-radius: 2px; margin-bottom: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #00843d; transition: width 0.3s; }
+        .result { background: #e8f5e9; border-left: 4px solid #00843d; padding: 20px; border-radius: 4px; }
+        .result h3 { color: #00843d; margin-bottom: 10px; }
+        .result ul { margin-left: 20px; line-height: 1.8; }
+        .admin-link { text-align: center; margin-top: 30px; }
+        .admin-link a { color: #00843d; text-decoration: none; font-size: 12px; }
+        @media (max-width: 768px) { .question { font-size: 16px; } button { padding: 10px 15px; font-size: 13px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Arbre de Décision IRSI/CIDE COP</h1>
+            <p>Outil d'aide à la décision pour dégâts des eaux</p>
+        </div>
+
+        <div id="breadcrumb" class="breadcrumb"></div>
+        <div class="progress"><div id="progress" class="progress-fill" style="width: 0%"></div></div>
+
+        <div id="question-card" class="card">
+            <div id="question" class="question"></div>
+            <div id="info" class="info"></div>
+            <div id="options" class="options"></div>
+            <div class="nav">
+                <button id="back" onclick="goBack()" disabled>← Précédent</button>
+                <button id="home" onclick="home()">🏠 Recommencer</button>
+            </div>
+        </div>
+
+        <div id="result-card" class="result" style="display: none;"></div>
+
+        <div class="admin-link">
+            <a href="/admin.html">🔧 Accès administration</a>
+        </div>
+    </div>
+
+    <script>
+        let treeData = {};
+        let currentNode = 'start';
+        let history = [];
+
+        window.addEventListener('load', loadTree);
+
+        async function loadTree() {
+            try {
+                const res = await fetch('/api/tree');
+                treeData = await res.json();
+                showNode('start');
+            } catch (err) {
+                console.error(err);
+                alert('Erreur de chargement');
+            }
+        }
+
+        function showNode(nodeId) {
+            if (!treeData[nodeId]) return;
+            
+            currentNode = nodeId;
+            const node = treeData[nodeId];
+            
+            document.getElementById('question').textContent = node.question || '';
+            document.getElementById('info').textContent = node.info || '';
+            
+            if (node.isResult || node.horsChamp) {
+                showResult(node);
+            } else {
+                showOptions(node);
+            }
+            
+            updateBreadcrumb();
+            updateProgress();
+        }
+
+        function showOptions(node) {
+            const container = document.getElementById('options');
+            container.innerHTML = '';
+            
+            if (node.options) {
+                node.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.textContent = opt.text;
+                    btn.onclick = () => {
+                        history.push(currentNode);
+                        showNode(opt.next);
+                    };
+                    container.appendChild(btn);
+                });
+            }
+            
+            document.getElementById('question-card').style.display = 'block';
+            document.getElementById('result-card').style.display = 'none';
+        }
+
+        function showResult(node) {
+            const container = document.getElementById('result-card');
+            container.innerHTML = `
+                <h3>${node.question}</h3>
+                <p>${node.info || ''}</p>
+            `;
+            
+            document.getElementById('question-card').style.display = 'none';
+            document.getElementById('result-card').style.display = 'block';
+        }
+
+        function goBack() {
+            if (history.length > 0) {
+                const prev = history.pop();
+                currentNode = prev;
+                showNode(prev);
+            }
+        }
+
+        function home() {
+            history = [];
+            showNode('start');
+        }
+
+        function updateBreadcrumb() {
+            const bc = document.getElementById('breadcrumb');
+            const paths = [];
+            let node = currentNode;
+            
+            while (node && paths.length < 10) {
+                const n = treeData[node];
+                if (n) paths.unshift(n.question || node);
+                
+                for (let h of history) {
+                    if (treeData[h]) {
+                        const opts = treeData[h].options || [];
+                        for (let opt of opts) {
+                            if (opt.next === node) {
+                                node = h;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+            
+            bc.innerHTML = paths.map(p => `<span>› ${p}</span>`).join('');
+        }
+
+        function updateProgress() {
+            const total = Object.keys(treeData).length;
+            const progress = Math.min(100, (history.length / 10) * 100);
+            document.getElementById('progress').style.width = progress + '%';
+        }
+    </script>
+</body>
+</html>

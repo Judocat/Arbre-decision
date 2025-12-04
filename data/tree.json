@@ -1,0 +1,98 @@
+{
+  "start": {
+    "question": "Type de bien concerné par le dégât des eaux ?",
+    "info": "Maison individuelle ou appartement en copropriété",
+    "options": [
+      {"text": "Maison individuelle", "next": "statutMaison"},
+      {"text": "Appartement en copropriété", "next": "statutAppart"}
+    ]
+  },
+  "statutMaison": {
+    "question": "Statut de l'occupant du local sinistré ?",
+    "info": "Article 2.1 IRSI",
+    "options": [
+      {"text": "Propriétaire occupant", "next": "causeMaison"},
+      {"text": "PNO - local vacant", "next": "hors"},
+      {"text": "PNO - local loué", "next": "causeMaison"},
+      {"text": "Locataire", "next": "causeMaison"}
+    ]
+  },
+  "statutAppart": {
+    "question": "Statut de l'occupant ?",
+    "info": "Article 2.1 IRSI",
+    "options": [
+      {"text": "Copropriétaire occupant", "next": "cause"},
+      {"text": "CNO vacant", "next": "cause"},
+      {"text": "CNO loué", "next": "cause"},
+      {"text": "Locataire", "next": "cause"}
+    ]
+  },
+  "causeMaison": {
+    "question": "Cause du DDE ?",
+    "info": "6 causes reconnues",
+    "options": [
+      {"text": "Fuite canalisation", "next": "responsable"},
+      {"text": "Fuite joint/raccord", "next": "responsable"},
+      {"text": "Débordement", "next": "responsable"},
+      {"text": "Rupture canalisation", "next": "responsable"},
+      {"text": "Appareil défectueux", "next": "responsable"},
+      {"text": "Exclusion", "next": "hors"}
+    ]
+  },
+  "cause": {
+    "question": "Cause du DDE ?",
+    "info": "6 causes reconnues",
+    "options": [
+      {"text": "Fuite canalisation", "next": "origine"},
+      {"text": "Fuite joint/raccord", "next": "origine"},
+      {"text": "Débordement", "next": "origine"},
+      {"text": "Rupture canalisation", "next": "origine"},
+      {"text": "Appareil défectueux", "next": "origine"},
+      {"text": "Exclusion", "next": "hors"}
+    ]
+  },
+  "origine": {
+    "question": "Où se situent les dommages ?",
+    "info": "Localisation des dégâts",
+    "options": [
+      {"text": "Parties privatives occupées", "next": "responsable"},
+      {"text": "Parties privatives vacantes", "next": "responsable"},
+      {"text": "Parties communes", "next": "responsable"}
+    ]
+  },
+  "responsable": {
+    "question": "Qui est le responsable conventionnel ?",
+    "info": "Article 5.211 CIDE COP / Article 1.1 IRSI",
+    "options": [
+      {"text": "Occupant - Risque usager", "next": "montant"},
+      {"text": "Occupant - Autre cause", "next": "montant"},
+      {"text": "Copropriétaire/Propriétaire non occupant", "next": "montant"},
+      {"text": "Collectivité", "next": "montant"},
+      {"text": "Cause indéterminée", "next": "montant"}
+    ]
+  },
+  "montant": {
+    "question": "Montant des dommages ?",
+    "info": "Détermine la convention applicable",
+    "options": [
+      {"text": "≤ 1 600 € HT (Tranche 1)", "next": "resultT1"},
+      {"text": "1 600 € - 5 000 € HT (Tranche 2)", "next": "resultT2"},
+      {"text": "> 5 000 € HT", "next": "hors"}
+    ]
+  },
+  "resultT1": {
+    "isResult": true,
+    "question": "✅ IRSI Tranche 1 - Application",
+    "info": "Article 6.1.1 IRSI - Abandon de recours"
+  },
+  "resultT2": {
+    "isResult": true,
+    "question": "✅ IRSI Tranche 2 - Application",
+    "info": "Article 6.2.1 IRSI - Expertise obligatoire, recours possibles"
+  },
+  "hors": {
+    "horsChamp": true,
+    "question": "❌ Hors Convention",
+    "info": "Application du droit commun"
+  }
+}
